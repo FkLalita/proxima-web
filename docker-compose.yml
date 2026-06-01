@@ -1,0 +1,38 @@
+# Run from the proxima root (parent of proxima-web)
+# or adjust context paths accordingly
+
+services:
+  api:
+    build:
+      context: ../proxima
+      dockerfile: Dockerfile
+    container_name: proxima_api
+    restart: unless-stopped
+    env_file: ../proxima/.env
+    environment:
+      - PORT=8080
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - proxima_net
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proxima_web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - proxima_net
+
+networks:
+  proxima_net:
+    driver: bridge
