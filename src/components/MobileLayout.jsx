@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, SlidersHorizontal, X, Plus, Loader2, MapPin, AlertCircle } from 'lucide-react'
+import { Search, X, Plus, Loader2, MapPin, AlertCircle } from 'lucide-react'
 import { BusinessCard } from './BusinessCard'
 import { ThemeToggle } from './ThemeToggle'
 import { useAuth } from '../context/AuthContext'
 
 const CATS = ['All', 'Restaurant', 'Pharmacy', 'Mechanic', 'Salon', 'Supermarket', 'Bank', 'Hotel']
-const PEEK_HEIGHT = 180 // px — how much drawer shows when collapsed
+const PEEK_HEIGHT = 180
 
 export function MobileLayout({
   map, businesses, loading, error,
@@ -24,7 +24,6 @@ export function MobileLayout({
 
   const maxH = window.innerHeight * 0.85
 
-  // Touch drag to resize drawer
   function onTouchStart(e) {
     startY.current = e.touches[0].clientY
     startH.current = drawerRef.current?.offsetHeight || PEEK_HEIGHT
@@ -73,9 +72,25 @@ export function MobileLayout({
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {user ? (
-              <button onClick={signOut} className="mobile-auth-btn">Sign out</button>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="mobile-auth-btn"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={signOut}
+                  className="mobile-auth-btn"
+                  style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                >
+                  Out
+                </button>
+              </div>
             ) : (
-              <button onClick={() => navigate('/auth')} className="mobile-auth-btn">Sign in</button>
+              <button onClick={() => navigate('/auth')} className="mobile-auth-btn">
+                Sign in
+              </button>
             )}
             <ThemeToggle />
           </div>
@@ -113,6 +128,14 @@ export function MobileLayout({
             )
           })}
         </div>
+
+        {/* Location warning */}
+        {locationError && (
+          <div className="location-warn" style={{ margin: '0 12px 10px' }}>
+            <AlertCircle size={12} />
+            {locationError}
+          </div>
+        )}
       </div>
 
       {/* FAB — add business */}
@@ -134,22 +157,28 @@ export function MobileLayout({
         onTouchEnd={onTouchEnd}
       >
         {/* Handle */}
-        <div className="drawer-handle-wrap" onClick={() => {
-          const next = !expanded
-          setExpanded(next)
-          if (drawerRef.current) drawerRef.current.style.height = (next ? maxH : PEEK_HEIGHT) + 'px'
-        }}>
+        <div
+          className="drawer-handle-wrap"
+          onClick={() => {
+            const next = !expanded
+            setExpanded(next)
+            if (drawerRef.current) {
+              drawerRef.current.style.height = (next ? maxH : PEEK_HEIGHT) + 'px'
+            }
+          }}
+        >
           <div className="drawer-handle" />
         </div>
 
         {/* Count */}
         <div className="drawer-count">
-          {loading
-            ? <><Loader2 size={12} className="spin" style={{ color: 'var(--accent)' }} /> Finding businesses…</>
-            : businesses.length > 0
-              ? <><MapPin size={12} style={{ color: 'var(--accent)' }} /> {businesses.length} businesses nearby</>
-              : 'No businesses found'
-          }
+          {loading ? (
+            <><Loader2 size={12} className="spin" style={{ color: 'var(--accent)' }} /> Finding businesses…</>
+          ) : businesses.length > 0 ? (
+            <><MapPin size={12} style={{ color: 'var(--accent)' }} /> {businesses.length} businesses nearby</>
+          ) : (
+            'No businesses found'
+          )}
         </div>
 
         {/* List */}
@@ -169,8 +198,16 @@ export function MobileLayout({
             <BusinessCard
               key={b.id || b.external_id || i}
               business={b}
-              active={!!selected && !!(b.external_id || b.id) && (selected.external_id === b.external_id || selected.id === b.id)}
-              onClick={() => { onSelect(b); setExpanded(false); if (drawerRef.current) drawerRef.current.style.height = PEEK_HEIGHT + 'px' }}
+              active={
+                !!selected &&
+                !!(b.external_id || b.id) &&
+                (selected.external_id === b.external_id || selected.id === b.id)
+              }
+              onClick={() => {
+                onSelect(b)
+                setExpanded(false)
+                if (drawerRef.current) drawerRef.current.style.height = PEEK_HEIGHT + 'px'
+              }}
               onOpenDetail={onOpenDetail}
               index={i}
             />
