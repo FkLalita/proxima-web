@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 
-const FALLBACK = { lat: 6.5244, lng: 3.3792 }
-const TIMEOUT = 8000
+async function getIPLocation() {
+  try {
+    const res = await fetch('https://ipapi.co/json/')
+    const data = await res.json()
+    if (data.latitude) return { lat: data.latitude, lng: data.longitude }
+  } catch { }
+  return { lat: 6.5244, lng: 3.3792 } // Lagos last resort
+}
 
 export function useLocation() {
   const [location, setLocation] = useState(null)
@@ -9,42 +15,40 @@ export function useLocation() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
+
+    // Start IP lookup immediately as fallback
+    getIPLocation().then(ipLoc => {
+      if (!cancelled && !location) {
+        setLocation(ipLoc)
+        setLoading(false)
+      }
+    })
+
     if (!navigator.geolocation) {
-      setLocation(FALLBACK)
       setError('Geolocation not supported')
-      setLoading(false)
       return
     }
 
-    // Set a hard timeout — don't wait forever
-    const timer = setTimeout(() => {
-      if (loading) {
-        setLocation(FALLBACK)
-        setError('Location timed out — showing default')
-        setLoading(false)
-      }
-    }, TIMEOUT)
-
+    // Try GPS in parallel — overwrites IP location if successful
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        clearTimeout(timer)
-        setLocation({ lat: coords.latitude, lng: coords.longitude })
-        setLoading(false)
+        if (!cancelled) {
+          setLocation({ lat: coords.latitude, lng: coords.longitude })
+          setError(null)
+          setLoading(false)
+        }
       },
-      (err) => {
-        clearTimeout(timer)
-        setLocation(FALLBACK)
-        setError(
-          err.code === 1
-            ? 'Location access denied — allow in browser settings'
-            : 'Could not get location'
-        )
-        setLoading(false)
+      () => {
+        if (!cancelled) {
+          setError('Using approximate location')
+          setLoading(false)
+        }
       },
-      { timeout: TIMEOUT, enableHighAccuracy: false, maximumAge: 30000 }
+      { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
     )
 
-    return () => clearTimeout(timer)
+    return () => { cancelled = true }
   }, [])
 
   return { location, error, loading }
