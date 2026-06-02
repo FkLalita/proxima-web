@@ -47,9 +47,9 @@ export function Sidebar({
       </div>
 
       {locationError && (
-        <div className="location-warn">
+        <div className="location-warn" style={{ cursor: 'pointer' }} onClick={() => window.location.reload()}>
           <AlertCircle size={12} />
-          {locationError}
+          📍 Tap to retry location — or allow GPS in browser settings
         </div>
       )}
 

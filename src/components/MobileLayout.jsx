@@ -131,9 +131,9 @@ export function MobileLayout({
 
         {/* Location warning */}
         {locationError && (
-          <div className="location-warn" style={{ margin: '0 12px 10px' }}>
+          <div className="location-warn" style={{ cursor: 'pointer' }} onClick={() => window.location.reload()}>
             <AlertCircle size={12} />
-            {locationError}
+            📍 Tap to retry location — or allow GPS in browser settings
           </div>
         )}
       </div>

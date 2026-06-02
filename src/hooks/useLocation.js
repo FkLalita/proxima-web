@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 
 async function getIPLocation() {
   try {
-    const res = await fetch('https://ipapi.co/json/')
+    const res = await fetch('http://ip-api.com/json/')
     const data = await res.json()
-    if (data.latitude) return { lat: data.latitude, lng: data.longitude }
+    if (data.status === 'success') return { lat: data.lat, lng: data.lon }
   } catch { }
-  return { lat: 6.5244, lng: 3.3792 } // Lagos last resort
+  return null
 }
 
 export function useLocation() {
