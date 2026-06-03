@@ -1,3 +1,4 @@
+import { useSEO } from './hooks/useSEO'
 import { useEffect, useState, useCallback } from 'react'
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 import { Sidebar } from './components/Sidebar'
@@ -68,6 +69,11 @@ function Home() {
   const [selected, setSelected] = useState(null)
   const [category, setCategory] = useState('')
 
+  useSEO({
+    title: 'Discover Local Businesses in Nigeria',
+    description: 'Find restaurants, mechanics, pharmacies, salons and more near you on Proxima.',
+    url: 'https://proxima-web-lemon.vercel.app',
+  })
   const fetchNearby = useCallback(async (lat, lng, cat = '') => {
     setLoading(true)
     setError(null)

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://proxima-web-lemon.vercel.app/sitemap.xml

@@ -1,3 +1,5 @@
+
+import { useSEO } from '../hooks/useSEO'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
@@ -50,6 +52,13 @@ export function BusinessDetail() {
   const hours = b?.hours || MOCK_HOURS
   const open = isOpenNow(hours)
   const today = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]
+
+  useSEO({
+    title: b ? `${b.name} — ${b.category || 'Business'} in ${b.address?.split(',').slice(-2).join(',').trim() || 'Nigeria'}` : 'Business',
+    description: b?.description
+      || `${b?.name} is a ${b?.category || 'local business'} located at ${b?.address || 'Nigeria'}. Find contact details and directions on Proxima.`,
+    url: window.location.href,
+  })
 
   const waLink = b?.whatsapp
     ? `https://wa.me/${b.whatsapp.replace(/\D/g, '')}?text=Hi, I found you on Proxima`

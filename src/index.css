@@ -337,3 +337,15 @@ select.form-input{cursor:pointer;}
 
 .form-input--error{border-color:#cc3333 !important;}
 .form-input--error:focus{border-color:#cc3333 !important;box-shadow:0 0 0 2px #cc333320;}
+
+
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;}
+.modal-tab{display:flex;align-items:center;gap:6px;padding:10px 14px;font-size:13px;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;transition:all 0.15s;font-family:var(--font-body);}
+.modal-tab--active{color:var(--accent);border-bottom-color:var(--accent);}
+.hours-editor{display:flex;flex-direction:column;gap:10px;}
+.hours-editor-row{display:flex;align-items:center;gap:12px;}
+.hours-editor-day{width:60px;flex-shrink:0;}
+.hours-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);}
+.hours-toggle input{accent-color:var(--accent);width:15px;height:15px;}
+.hours-editor-times{display:flex;align-items:center;gap:8px;flex:1;}
+.hours-time-input{padding:6px 8px !important;font-size:12px !important;width:auto !important;flex:1;}
