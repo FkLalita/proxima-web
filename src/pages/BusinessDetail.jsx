@@ -198,8 +198,9 @@ export function BusinessDetail() {
                   center={[b.coordinates.lat, b.coordinates.lng]}
                   zoom={15}
                   style={{ width: '100%', height: '100%' }}
-                  zoomControl={false}
-                  scrollWheelZoom={false}
+                  zoomControl={true}
+                  scrollWheelZoom={true}
+                  dragging={true}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
