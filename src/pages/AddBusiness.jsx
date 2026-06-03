@@ -1,6 +1,3 @@
-
-import { validate, sanitize, sanitizePhone } from '../utils/validate'
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -9,6 +6,7 @@ import { ArrowLeft, Check, Loader2, AlertCircle } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from '../hooks/useLocation'
+import { validate, sanitize, sanitizePhone } from '../utils/validate'
 
 const CATEGORIES = ['Restaurant', 'Pharmacy', 'Mechanic', 'Salon', 'Supermarket', 'Bank', 'Hotel', 'Church', 'Mosque', 'School', 'Hospital', 'Bar', 'Bakery', 'Gym', 'Other']
 
@@ -28,21 +26,35 @@ function PinPicker({ onPick, pin }) {
   )
 }
 
+function FieldError({ error }) {
+  if (!error) return null
+  return <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{error}</p>
+}
+
 export function AddBusiness() {
   const navigate = useNavigate()
   const { getToken } = useAuth()
   const { location } = useLocation()
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState(null)
+  const [submitError, setSubmitError] = useState(null)
   const [pin, setPin] = useState(null)
+  const [formErrors, setFormErrors] = useState({})
   const [form, setForm] = useState({
-    name: '', category: '', address: '',
-    phone: '', whatsapp: '', website: '', instagram: '', description: ''
+    name: '',
+    category: '',
+    address: '',
+    phone: '',
+    whatsapp: '',
+    website: '',
+    instagram: '',
+    description: '',
   })
 
-  const set = field => e => setForm(f => ({ ...f, [field]: e.target.value }))
-  const [formErrors, setFormErrors] = useState({})
+  const set = field => e => {
+    setForm(f => ({ ...f, [field]: e.target.value }))
+    setFormErrors(ev => ({ ...ev, [field]: null }))
+  }
 
   function validateStep1() {
     const e = {}
@@ -64,9 +76,9 @@ export function AddBusiness() {
   }
 
   async function handleSubmit() {
-    if (!pin) { setError('Please pin your business location on the map'); return }
+    if (!pin) { setSubmitError('Please pin your business location on the map'); return }
     setSubmitting(true)
-    setError(null)
+    setSubmitError(null)
     try {
       const token = await getToken()
       if (!token) throw new Error('Please sign in first')
@@ -91,7 +103,7 @@ export function AddBusiness() {
       if (!res.ok) throw new Error(`API error ${res.status}`)
       setStep(3)
     } catch (e) {
-      setError(e.message)
+      setSubmitError(e.message)
     } finally {
       setSubmitting(false)
     }
@@ -116,6 +128,9 @@ export function AddBusiness() {
         <p className="add-sub">Your business has been submitted and will appear on the map shortly.</p>
         <button onClick={() => navigate('/')} className="btn-wa" style={{ marginTop: 8, padding: '12px 28px' }}>
           Back to map
+        </button>
+        <button onClick={() => navigate('/dashboard')} className="btn-call" style={{ padding: '12px 28px' }}>
+          Go to Dashboard
         </button>
       </div>
     </div>
@@ -156,48 +171,85 @@ export function AddBusiness() {
 
             <div className="form-group">
               <label className="form-label">Business Name *</label>
-              <input className="form-input" value={form.name} onChange={set('name')} placeholder="e.g. Ade's Auto Repair" />
-              {formErrors.name && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.name}</p>}
+              <input
+                className={`form-input ${formErrors.name ? 'form-input--error' : ''}`}
+                value={form.name}
+                onChange={set('name')}
+                placeholder="e.g. Ade's Auto Repair"
+              />
+              <FieldError error={formErrors.name} />
             </div>
 
             <div className="form-group">
               <label className="form-label">Category *</label>
-              {formErrors.category && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.category}</p>}
-              <select className="form-input" value={form.category} onChange={set('category')}>
+              <select
+                className={`form-input ${formErrors.category ? 'form-input--error' : ''}`}
+                value={form.category}
+                onChange={set('category')}
+              >
                 <option value="">Select a category</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+              <FieldError error={formErrors.category} />
             </div>
 
             <div className="form-group">
               <label className="form-label">Address *</label>
-              <input className="form-input" value={form.address} onChange={set('address')} placeholder="e.g. 12 Taiwo Road, Ilorin" />
-              {formErrors.address && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.address}</p>}
+              <input
+                className={`form-input ${formErrors.address ? 'form-input--error' : ''}`}
+                value={form.address}
+                onChange={set('address')}
+                placeholder="e.g. 12 Taiwo Road, Ilorin"
+              />
+              <FieldError error={formErrors.address} />
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Phone</label>
-                <input className="form-input" value={form.phone} onChange={set('phone')} placeholder="08012345678" />
-                {formErrors.phone && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.phone}</p>}
+                <input
+                  className={`form-input ${formErrors.phone ? 'form-input--error' : ''}`}
+                  value={form.phone}
+                  onChange={set('phone')}
+                  placeholder="08012345678"
+                  type="tel"
+                />
+                <FieldError error={formErrors.phone} />
               </div>
               <div className="form-group">
                 <label className="form-label">WhatsApp</label>
-                <input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} placeholder="08012345678" />
-                {formErrors.whatsapp && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.whatsapp}</p>}
+                <input
+                  className={`form-input ${formErrors.whatsapp ? 'form-input--error' : ''}`}
+                  value={form.whatsapp}
+                  onChange={set('whatsapp')}
+                  placeholder="08012345678"
+                  type="tel"
+                />
+                <FieldError error={formErrors.whatsapp} />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Website</label>
-                <input className="form-input" value={form.website} onChange={set('website')} placeholder="https://..." />
-                {formErrors.website && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.website}</p>}
+                <input
+                  className={`form-input ${formErrors.website ? 'form-input--error' : ''}`}
+                  value={form.website}
+                  onChange={set('website')}
+                  placeholder="https://..."
+                  type="url"
+                />
+                <FieldError error={formErrors.website} />
               </div>
               <div className="form-group">
                 <label className="form-label">Instagram</label>
-                <input className="form-input" value={form.instagram} onChange={set('instagram')} placeholder="@handle" />
-                {formErrors.instagram && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.instagram}</p>}
+                <input
+                  className={`form-input ${formErrors.instagram ? 'form-input--error' : ''}`}
+                  value={form.instagram}
+                  onChange={set('instagram')}
+                  placeholder="@handle"
+                />
+                <FieldError error={formErrors.instagram} />
               </div>
             </div>
 
@@ -215,9 +267,7 @@ export function AddBusiness() {
             <button
               className="btn-wa"
               style={{ width: '100%', justifyContent: 'center', padding: '13px', marginTop: 8 }}
-              disabled={!step1Valid()}
               onClick={() => { if (validateStep1()) setStep(2) }}
-
             >
               Next: Pin Location
             </button>
@@ -254,10 +304,10 @@ export function AddBusiness() {
               </MapContainer>
             </div>
 
-            {error && (
+            {submitError && (
               <div className="add-error">
                 <AlertCircle size={14} />
-                {error}
+                {submitError}
               </div>
             )}
 
