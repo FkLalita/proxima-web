@@ -333,3 +333,7 @@ select.form-input{cursor:pointer;}
 .mobile-drawer{display:none;}
 .drawer-handle-wrap{display:none;}
 .mobile-fab{display:none;}
+
+
+.form-input--error{border-color:#cc3333 !important;}
+.form-input--error:focus{border-color:#cc3333 !important;box-shadow:0 0 0 2px #cc333320;}

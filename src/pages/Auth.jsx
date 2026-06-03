@@ -2,42 +2,65 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ThemeToggle } from '../components/ThemeToggle'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Mail } from 'lucide-react'
+import { validate } from '../utils/validate'
+
+function FieldError({ error }) {
+  if (!error) return null
+  return <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{error}</p>
+}
 
 export function Auth() {
   const navigate = useNavigate()
-  const { signIn, signUp, signInWithGoogle } = useAuth()
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'verify'
+  const { signIn, signUp, signInWithGoogle, supabase } = useAuth()
+  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'magic' | 'verify' | 'magic_sent'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [globalError, setGlobalError] = useState(null)
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  function validateForm() {
+    const e = {}
+    const emailErr = validate.email(email)
+    if (emailErr) e.email = emailErr
+    if (mode !== 'magic') {
+      const passErr = validate.password(password)
+      if (passErr) e.password = passErr
+    }
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  async function handleSubmit(ev) {
+    ev.preventDefault()
+    if (!validateForm()) return
     setLoading(true)
-    setError(null)
+    setGlobalError(null)
     try {
-      if (mode === 'signup') {
-        await signUp(email, password)
+      if (mode === 'magic') {
+        await supabase.auth.signInWithOtp({ email: email.trim() })
+        setMode('magic_sent')
+      } else if (mode === 'signup') {
+        await signUp(email.trim(), password)
         setMode('verify')
       } else {
-        await signIn(email, password)
+        await signIn(email.trim(), password)
         navigate(-1)
       }
     } catch (e) {
-      setError(e.message)
+      setGlobalError(e.message)
     } finally {
       setLoading(false)
     }
   }
 
   async function handleGoogle() {
-    setError(null)
+    setGlobalError(null)
     try {
       await signInWithGoogle()
     } catch (e) {
-      setError(e.message)
+      setGlobalError(e.message)
     }
   }
 
@@ -52,11 +75,32 @@ export function Auth() {
         <ThemeToggle />
       </div>
       <div className="auth-body">
-        <div className="success-icon"><span style={{ fontSize: 28 }}>✉️</span></div>
+        <div className="success-icon"><Mail size={28} color="white" /></div>
         <h2 className="add-title">Check your email</h2>
         <p className="add-sub">We sent a verification link to <strong>{email}</strong>. Click it to activate your account then sign in.</p>
         <button onClick={() => setMode('signin')} className="btn-wa" style={{ marginTop: 16, padding: '12px 28px' }}>
           Go to Sign In
+        </button>
+      </div>
+    </div>
+  )
+
+  if (mode === 'magic_sent') return (
+    <div className="auth-page">
+      <div className="auth-topbar">
+        <button onClick={() => navigate('/')} className="detail-back"><ArrowLeft size={18} /></button>
+        <div className="detail-topbar-logo">
+          <div className="logo-mark" style={{ width: 24, height: 24, fontSize: 12 }}>P</div>
+          <span className="logo-text" style={{ fontSize: 15 }}>Proxima</span>
+        </div>
+        <ThemeToggle />
+      </div>
+      <div className="auth-body">
+        <div className="success-icon"><Mail size={28} color="white" /></div>
+        <h2 className="add-title">Magic link sent!</h2>
+        <p className="add-sub">Check <strong>{email}</strong> for a sign-in link. Click it and you'll be logged in automatically — no password needed.</p>
+        <button onClick={() => setMode('signin')} className="btn-call" style={{ marginTop: 16, padding: '12px 28px' }}>
+          Use password instead
         </button>
       </div>
     </div>
@@ -74,8 +118,16 @@ export function Auth() {
       </div>
 
       <div className="auth-body">
-        <h2 className="add-title">{mode === 'signin' ? 'Welcome back' : 'Create account'}</h2>
-        <p className="add-sub">{mode === 'signin' ? 'Sign in to manage your business listing' : 'List your business on Proxima for free'}</p>
+        <div style={{ width: '100%', textAlign: 'left' }}>
+          <h2 className="add-title">
+            {mode === 'signin' ? 'Welcome back' : mode === 'magic' ? 'Sign in with email' : 'Create account'}
+          </h2>
+          <p className="add-sub">
+            {mode === 'signin' ? 'Sign in to manage your business listing'
+              : mode === 'magic' ? 'We\'ll send a magic link to your email'
+                : 'List your business on Proxima for free'}
+          </p>
+        </div>
 
         <button onClick={handleGoogle} className="auth-google-btn">
           <svg width="18" height="18" viewBox="0 0 24 24">
@@ -92,26 +144,76 @@ export function Auth() {
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label className="form-label">Email</label>
-            <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+            <input
+              className={`form-input ${errors.email ? 'form-input--error' : ''}`}
+              type="email"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setErrors(ev => ({ ...ev, email: null })) }}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+            <FieldError error={errors.email} />
           </div>
 
-          {error && <p className="auth-error">{error}</p>}
+          {mode !== 'magic' && (
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input
+                className={`form-input ${errors.password ? 'form-input--error' : ''}`}
+                type="password"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setErrors(ev => ({ ...ev, password: null })) }}
+                placeholder="••••••••"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                minLength={6}
+              />
+              <FieldError error={errors.password} />
+              {mode === 'signin' && (
+                <button
+                  type="button"
+                  onClick={() => { setMode('magic'); setErrors({}) }}
+                  style={{ fontSize: 11, color: 'var(--accent)', marginTop: 4, textAlign: 'right', width: '100%' }}
+                >
+                  Forgot password? Send magic link instead
+                </button>
+              )}
+            </div>
+          )}
 
-          <button type="submit" className="btn-wa" style={{ width: '100%', justifyContent: 'center', padding: '13px' }} disabled={loading}>
-            {loading ? <><Loader2 size={16} className="spin" /> Please wait…</> : mode === 'signin' ? 'Sign In' : 'Create Account'}
+          {globalError && <p className="auth-error">{globalError}</p>}
+
+          <button
+            type="submit"
+            className="btn-wa"
+            style={{ width: '100%', justifyContent: 'center', padding: '13px' }}
+            disabled={loading}
+          >
+            {loading
+              ? <><Loader2 size={16} className="spin" /> Please wait…</>
+              : mode === 'signin' ? 'Sign In'
+                : mode === 'magic' ? 'Send Magic Link'
+                  : 'Create Account'
+            }
           </button>
         </form>
 
-        <p className="auth-switch">
-          {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-          <button onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null) }} style={{ color: 'var(--accent)', fontWeight: 600 }}>
-            {mode === 'signin' ? 'Sign Up' : 'Sign In'}
-          </button>
-        </p>
+        {mode === 'magic' ? (
+          <p className="auth-switch">
+            <button onClick={() => { setMode('signin'); setErrors({}) }} style={{ color: 'var(--accent)', fontWeight: 600 }}>
+              ← Back to sign in
+            </button>
+          </p>
+        ) : (
+          <p className="auth-switch">
+            {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
+            <button
+              onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setErrors({}); setGlobalError(null) }}
+              style={{ color: 'var(--accent)', fontWeight: 600 }}
+            >
+              {mode === 'signin' ? 'Sign Up' : 'Sign In'}
+            </button>
+          </p>
+        )}
       </div>
     </div>
   )

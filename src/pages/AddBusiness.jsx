@@ -1,3 +1,6 @@
+
+import { validate, sanitize, sanitizePhone } from '../utils/validate'
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -39,7 +42,26 @@ export function AddBusiness() {
   })
 
   const set = field => e => setForm(f => ({ ...f, [field]: e.target.value }))
-  const step1Valid = () => form.name.trim() && form.category && form.address.trim()
+  const [formErrors, setFormErrors] = useState({})
+
+  function validateStep1() {
+    const e = {}
+    const nameErr = validate.name(form.name)
+    if (nameErr) e.name = nameErr
+    const addrErr = validate.address(form.address)
+    if (addrErr) e.address = addrErr
+    if (!form.category) e.category = 'Please select a category'
+    const phoneErr = validate.phone(form.phone)
+    if (phoneErr) e.phone = phoneErr
+    const waErr = validate.whatsapp(form.whatsapp)
+    if (waErr) e.whatsapp = waErr
+    const urlErr = validate.url(form.website)
+    if (urlErr) e.website = urlErr
+    const igErr = validate.instagram(form.instagram)
+    if (igErr) e.instagram = igErr
+    setFormErrors(e)
+    return Object.keys(e).length === 0
+  }
 
   async function handleSubmit() {
     if (!pin) { setError('Please pin your business location on the map'); return }
@@ -55,15 +77,15 @@ export function AddBusiness() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: form.name,
-          category: form.category,
-          address: form.address,
+          name: sanitize(form.name),
+          category: sanitize(form.category),
+          address: sanitize(form.address),
           coordinates: pin,
-          phone: form.phone,
-          whatsapp: form.whatsapp,
-          website: form.website,
-          instagram: form.instagram,
-          description: form.description,
+          phone: sanitizePhone(form.phone),
+          whatsapp: sanitizePhone(form.whatsapp),
+          website: sanitize(form.website),
+          instagram: sanitize(form.instagram.replace(/^@/, '')),
+          description: sanitize(form.description),
         })
       })
       if (!res.ok) throw new Error(`API error ${res.status}`)
@@ -135,10 +157,12 @@ export function AddBusiness() {
             <div className="form-group">
               <label className="form-label">Business Name *</label>
               <input className="form-input" value={form.name} onChange={set('name')} placeholder="e.g. Ade's Auto Repair" />
+              {formErrors.name && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.name}</p>}
             </div>
 
             <div className="form-group">
               <label className="form-label">Category *</label>
+              {formErrors.category && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.category}</p>}
               <select className="form-input" value={form.category} onChange={set('category')}>
                 <option value="">Select a category</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -148,16 +172,19 @@ export function AddBusiness() {
             <div className="form-group">
               <label className="form-label">Address *</label>
               <input className="form-input" value={form.address} onChange={set('address')} placeholder="e.g. 12 Taiwo Road, Ilorin" />
+              {formErrors.address && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.address}</p>}
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Phone</label>
                 <input className="form-input" value={form.phone} onChange={set('phone')} placeholder="08012345678" />
+                {formErrors.phone && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.phone}</p>}
               </div>
               <div className="form-group">
                 <label className="form-label">WhatsApp</label>
                 <input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} placeholder="08012345678" />
+                {formErrors.whatsapp && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.whatsapp}</p>}
               </div>
             </div>
 
@@ -165,10 +192,12 @@ export function AddBusiness() {
               <div className="form-group">
                 <label className="form-label">Website</label>
                 <input className="form-input" value={form.website} onChange={set('website')} placeholder="https://..." />
+                {formErrors.website && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.website}</p>}
               </div>
               <div className="form-group">
                 <label className="form-label">Instagram</label>
                 <input className="form-input" value={form.instagram} onChange={set('instagram')} placeholder="@handle" />
+                {formErrors.instagram && <p style={{ fontSize: 11, color: '#cc3333', marginTop: 3 }}>{formErrors.instagram}</p>}
               </div>
             </div>
 
@@ -187,7 +216,8 @@ export function AddBusiness() {
               className="btn-wa"
               style={{ width: '100%', justifyContent: 'center', padding: '13px', marginTop: 8 }}
               disabled={!step1Valid()}
-              onClick={() => setStep(2)}
+              onClick={() => { if (validateStep1()) setStep(2) }}
+
             >
               Next: Pin Location
             </button>
