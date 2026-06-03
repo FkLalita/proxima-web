@@ -154,6 +154,11 @@ export function BusinessDetail() {
             )}
           </div>
 
+          <div className="detail-section">
+            <h2 className="detail-section-title">SHARE THIS BUSINESS</h2>
+            <ShareButton business={b} />
+          </div>
+
           {/* About */}
           {b.description && (
             <div className="detail-section">

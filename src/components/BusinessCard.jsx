@@ -1,4 +1,4 @@
-import { MapPin, Phone, MessageCircle, ShieldCheck, ChevronRight } from 'lucide-react'
+import { MapPin, Phone, MessageCircle, ShieldCheck, Share2, ChevronRight } from 'lucide-react'
 
 export function BusinessCard({ business: b, active, onClick, onOpenDetail, index }) {
   const isVerified = b.verification_tier === 'verified' || b.verification_tier === 'claimed'
@@ -47,6 +47,21 @@ export function BusinessCard({ business: b, active, onClick, onOpenDetail, index
             WhatsApp
           </a>
         )}
+        <button
+          onClick={e => {
+            e.stopPropagation()
+            const url = `${window.location.origin}/business/${b.external_id || b.id}`
+            if (navigator.share) {
+              navigator.share({ title: b.name, url })
+            } else {
+              navigator.clipboard.writeText(url)
+            }
+          }}
+          className="biz-detail-btn"
+          title="Share"
+        >
+          <Share2 size={13} strokeWidth={2} />
+        </button>
         {b.phone && (
           <a href={`tel:${b.phone}`}
             onClick={e => e.stopPropagation()} className="btn-call">
