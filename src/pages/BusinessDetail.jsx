@@ -1,4 +1,4 @@
-
+import { ShareButton } from '../components/ShareButton'
 import { useSEO } from '../hooks/useSEO'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
@@ -84,9 +84,11 @@ export function BusinessDetail() {
           <div className="logo-mark" style={{ width: 24, height: 24, fontSize: 12 }}>P</div>
           <span className="logo-text" style={{ fontSize: 15 }}>Proxima</span>
         </div>
-        <ThemeToggle />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {b && <ShareButton business={b} />}
+          <ThemeToggle />
+        </div>
       </div>
-
       <div className="detail-body">
         {/* Hero */}
         <div className="detail-hero">
