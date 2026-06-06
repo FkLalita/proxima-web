@@ -1,13 +1,13 @@
-import { ShareButton } from '../components/ShareButton'
-import { useSEO } from '../hooks/useSEO'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import {
   ArrowLeft, ShieldCheck, Star, Phone, MessageCircle,
-  MapPin, Clock, Globe, ExternalLink
+  MapPin, Globe, ExternalLink
 } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { ShareButton } from '../components/ShareButton'
+import { useSEO } from '../hooks/useSEO'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -48,15 +48,13 @@ export function BusinessDetail() {
   const navigate = useNavigate()
   const b = state?.business
 
-  // Use mock hours for now — will come from DB when owners fill it in
   const hours = b?.hours || MOCK_HOURS
   const open = isOpenNow(hours)
   const today = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]
 
   useSEO({
     title: b ? `${b.name} — ${b.category || 'Business'} in ${b.address?.split(',').slice(-2).join(',').trim() || 'Nigeria'}` : 'Business',
-    description: b?.description
-      || `${b?.name} is a ${b?.category || 'local business'} located at ${b?.address || 'Nigeria'}. Find contact details and directions on Proxima.`,
+    description: b?.description || `${b?.name} is a ${b?.category || 'local business'} located at ${b?.address || 'Nigeria'}. Find contact details on Proxima.`,
     url: window.location.href,
   })
 
@@ -66,16 +64,15 @@ export function BusinessDetail() {
 
   if (!b) {
     return (
-      <div className="detail-not-found">
-        <p>Business not found.</p>
-        <button onClick={() => navigate('/')} className="btn-back">Go back</button>
+      <div className="detail-page" style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>Business not found.</p>
+        <button onClick={() => navigate('/')} className="btn-wa">Go back</button>
       </div>
     )
   }
 
   return (
     <div className="detail-page">
-      {/* Top bar */}
       <div className="detail-topbar">
         <button onClick={() => navigate(-1)} className="detail-back">
           <ArrowLeft size={18} strokeWidth={2} />
@@ -85,12 +82,11 @@ export function BusinessDetail() {
           <span className="logo-text" style={{ fontSize: 15 }}>Proxima</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {b && <ShareButton business={b} />}
           <ThemeToggle />
         </div>
       </div>
+
       <div className="detail-body">
-        {/* Hero */}
         <div className="detail-hero">
           <div className="detail-hero-placeholder">
             <MapPin size={40} strokeWidth={1} style={{ color: 'var(--text-light)' }} />
@@ -99,36 +95,36 @@ export function BusinessDetail() {
         </div>
 
         <div className="detail-content">
-          {/* Name + status */}
           <div className="detail-name-row">
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <h1 className="detail-name">{b.name}</h1>
-                {b.verification_tier !== 'unverified' && (
-                  <span className="biz-badge">
-                    <ShieldCheck size={11} strokeWidth={2.5} />
-                    Verified
-                  </span>
-                )}
-              </div>
-              <div className="detail-meta">
-                {b.rating && (
-                  <span className="detail-rating">
-                    <Star size={13} fill="#F5A623" color="#F5A623" />
-                    {b.rating}
-                  </span>
-                )}
-                {b.category && <span>{b.category}</span>}
-                {open !== null && (
-                  <span style={{ color: open ? '#1B7A4A' : '#cc3333', fontWeight: 600 }}>
-                    {open ? 'Open Now' : 'Closed'}
-                  </span>
-                )}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <h1 className="detail-name">{b.name}</h1>
+                  {b.verification_tier !== 'unverified' && (
+                    <span className="biz-badge">
+                      <ShieldCheck size={11} strokeWidth={2.5} />
+                      Verified
+                    </span>
+                  )}
+                </div>
+                <div className="detail-meta">
+                  {b.rating && (
+                    <span className="detail-rating">
+                      <Star size={13} fill="#F5A623" color="#F5A623" />
+                      {b.rating}
+                    </span>
+                  )}
+                  {b.category && <span>{b.category}</span>}
+                  {open !== null && (
+                    <span style={{ color: open ? '#1B7A4A' : '#cc3333', fontWeight: 600 }}>
+                      {open ? 'Open Now' : 'Closed'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* CTA buttons */}
           <div className="detail-ctas">
             {waLink ? (
               <a href={waLink} target="_blank" rel="noreferrer" className="detail-btn-wa">
@@ -159,7 +155,6 @@ export function BusinessDetail() {
             <ShareButton business={b} />
           </div>
 
-          {/* About */}
           {b.description && (
             <div className="detail-section">
               <h2 className="detail-section-title">ABOUT THE BUSINESS</h2>
@@ -167,7 +162,6 @@ export function BusinessDetail() {
             </div>
           )}
 
-          {/* Address + Hours */}
           <div className="detail-info-grid">
             <div className="detail-section">
               <h2 className="detail-section-title">PHYSICAL ADDRESS</h2>
@@ -195,9 +189,7 @@ export function BusinessDetail() {
                   return (
                     <div key={day} className={`hours-row ${isToday ? 'hours-row--today' : ''}`}>
                       <span className="hours-day">{day.slice(0, 3)}</span>
-                      <span className="hours-time">
-                        {h ? `${h.open} – ${h.close}` : 'Closed'}
-                      </span>
+                      <span className="hours-time">{h ? `${h.open} – ${h.close}` : 'Closed'}</span>
                     </div>
                   )
                 })}
@@ -205,7 +197,6 @@ export function BusinessDetail() {
             </div>
           </div>
 
-          {/* Map */}
           {b.coordinates?.lat && (
             <div className="detail-section">
               <h2 className="detail-section-title">LOCATION</h2>
@@ -222,38 +213,34 @@ export function BusinessDetail() {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; OpenStreetMap'
                   />
-                  <Marker
-                    position={[b.coordinates.lat, b.coordinates.lng]}
-                    icon={makePin()}
-                  />
+                  <Marker position={[b.coordinates.lat, b.coordinates.lng]} icon={makePin()} />
                 </MapContainer>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${b.coordinates.lat},${b.coordinates.lng}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="detail-open-maps"
+
+                href={`https://www.google.com/maps/search/?api=1&query=${b.coordinates.lat},${b.coordinates.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="detail-open-maps"
                 >
-                  <ExternalLink size={13} />
-                  Open in Maps
-                </a>
-              </div>
+                <ExternalLink size={13} />
+                Open in Maps
+              </a>
+            </div>
             </div>
           )}
 
-          {/* Proxima Protection */}
-          {b.verification_tier !== 'unverified' && (
-            <div className="detail-protection">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <ShieldCheck size={16} strokeWidth={2} style={{ color: 'var(--accent)' }} />
-                <span style={{ fontWeight: 700, fontSize: 13 }}>Proxima Protection</span>
-              </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                This business is a verified Proxima partner. All services are backed by our community excellence guarantee.
-              </p>
+        {b.verification_tier !== 'unverified' && (
+          <div className="detail-protection">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <ShieldCheck size={16} strokeWidth={2} style={{ color: 'var(--accent)' }} />
+              <span style={{ fontWeight: 700, fontSize: 13 }}>Proxima Protection</span>
             </div>
-          )}
-        </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              This business is a verified Proxima partner. All services are backed by our community excellence guarantee.
+            </p>
+          </div>
+        )}
       </div>
     </div>
+    </div >
   )
 }

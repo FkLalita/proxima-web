@@ -1,18 +1,21 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SearchBar } from './SearchBar'
 import { BusinessCard } from './BusinessCard'
 import { ThemeToggle } from './ThemeToggle'
-import { Loader2, MapPin, AlertCircle, Building2 } from 'lucide-react'
+import { RouteSearch } from './RouteSearch'
+import { Loader2, MapPin, AlertCircle, Building2, Navigation } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export function Sidebar({
   businesses, loading, error,
   selected, onSelect, onOpenDetail,
   onSearch, onCategory, activeCategory,
-  locationError, location,
+  locationError, location, onRouteResults,
 }) {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const [showRoute, setShowRoute] = useState(false)
 
   return (
     <aside className="sidebar">
@@ -27,13 +30,21 @@ export function Sidebar({
           )}
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div className="auth-indicator" style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
+              <div
+                className="auth-indicator"
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate('/dashboard')}
+              >
                 <div className="auth-dot" />
                 <span>dashboard</span>
               </div>
             </div>
           ) : (
-            <div className="auth-indicator" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth')}>
+            <div
+              className="auth-indicator"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/auth')}
+            >
               <div className="auth-dot auth-dot--out" />
               <span>sign in</span>
             </div>
@@ -43,13 +54,36 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-search">
-        <SearchBar onSearch={onSearch} onCategory={onCategory} activeCategory={activeCategory} />
+        <SearchBar
+          onSearch={onSearch}
+          onCategory={onCategory}
+          activeCategory={activeCategory}
+        />
+        <button
+          onClick={() => setShowRoute(r => !r)}
+          className={`cat-chip ${showRoute ? 'cat-chip--active' : ''}`}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8 }}
+        >
+          <Navigation size={11} />
+          Route Search
+        </button>
+        {showRoute && (
+          <div style={{ marginTop: 8 }}>
+            <RouteSearch
+              userLocation={location}
+              onResults={(results) => {
+                onRouteResults && onRouteResults(results)
+              }}
+              onClose={() => setShowRoute(false)}
+            />
+          </div>
+        )}
       </div>
 
       {locationError && (
-        <div className="location-warn" style={{ cursor: 'pointer' }} onClick={() => window.location.reload()}>
+        <div className="location-warn">
           <AlertCircle size={12} />
-          📍 Tap to retry location — or allow GPS in browser settings
+          {locationError}
         </div>
       )}
 

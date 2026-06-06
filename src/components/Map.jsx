@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet'
+import { useEffect, useRef, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 
 delete L.Icon.Default.prototype._getIconUrl
@@ -35,9 +35,46 @@ function Init({ location }) {
   return null
 }
 
+function ZoomTracker({ onZoom }) {
+  useMapEvents({
+    zoomend(e) { onZoom(e.target.getZoom()) }
+  })
+  return null
+}
+
+function ClusterLayer({ location, zoom }) {
+  const [clusters, setClusters] = useState([])
+
+  useEffect(() => {
+    if (!location || zoom >= 13) { setClusters([]); return }
+    const radius = zoom <= 8 ? 500000 : zoom <= 10 ? 100000 : 50000
+    fetch(`/api/v1/businesses/clusters?lat=${location.lat}&lng=${location.lng}&radius=${radius}&zoom=${zoom}`)
+      .then(r => r.json())
+      .then(d => setClusters(d.data || []))
+      .catch(() => { })
+  }, [location, zoom])
+
+  return clusters.map(c => (
+    <Circle
+      key={c.cluster_id}
+      center={[c.lat, c.lng]}
+      radius={zoom <= 8 ? 20000 : 8000}
+      pathOptions={{ color: '#1B7A4A', fillColor: '#1B7A4A', fillOpacity: 0.15, weight: 2 }}
+    >
+      <Popup>
+        <div style={{ textAlign: 'center', fontFamily: 'sans-serif' }}>
+          <p style={{ fontWeight: 700, fontSize: 16 }}>{c.count}</p>
+          <p style={{ fontSize: 11, color: '#888' }}>businesses here</p>
+        </div>
+      </Popup>
+    </Circle>
+  ))
+}
+
 export function Map({ businesses, location, selected, onSelectBusiness, onOpenDetail, radius, loading }) {
   const center = location || { lat: 9.0820, lng: 8.6753 }
   const zoom = location ? 14 : 6
+  const [currentZoom, setCurrentZoom] = useState(zoom)
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
@@ -58,20 +95,17 @@ export function Map({ businesses, location, selected, onSelectBusiness, onOpenDe
         />
 
         <Init location={location} />
+        <ZoomTracker onZoom={setCurrentZoom} />
         {selected?.coordinates && <FlyTo center={selected.coordinates} />}
+
+        {currentZoom < 13 && <ClusterLayer location={location} zoom={currentZoom} />}
 
         {location && (
           <>
             <Circle
               center={[location.lat, location.lng]}
               radius={radius || 2000}
-              pathOptions={{
-                color: '#1B7A4A',
-                fillColor: '#1B7A4A',
-                fillOpacity: 0.05,
-                weight: 1.5,
-                dashArray: '4',
-              }}
+              pathOptions={{ color: '#1B7A4A', fillColor: '#1B7A4A', fillOpacity: 0.05, weight: 1.5, dashArray: '4' }}
             />
             <Marker
               position={[location.lat, location.lng]}
@@ -87,7 +121,7 @@ export function Map({ businesses, location, selected, onSelectBusiness, onOpenDe
           </>
         )}
 
-        {businesses.map((b, i) => {
+        {currentZoom >= 13 && businesses.map((b, i) => {
           if (!b.coordinates?.lat) return null
           const isSelected = selected?.external_id === b.external_id || selected?.id === b.id
           const color = isSelected ? '#145c37' : '#1B7A4A'
@@ -132,6 +166,6 @@ export function Map({ businesses, location, selected, onSelectBusiness, onOpenDe
           )
         })}
       </MapContainer>
-    </div >
+    </div>
   )
 }

@@ -1,4 +1,3 @@
-import { useSEO } from './hooks/useSEO'
 import { useEffect, useState, useCallback } from 'react'
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 import { Sidebar } from './components/Sidebar'
@@ -7,11 +6,11 @@ import { Map } from './components/Map'
 import { BusinessDetail } from './pages/BusinessDetail'
 import { AddBusiness } from './pages/AddBusiness'
 import { Auth } from './pages/Auth'
+import { Dashboard } from './pages/Dashboard'
 import { businessApi } from './api/businesses'
 import { useLocation } from './hooks/useLocation'
 import { useAuth } from './context/AuthContext'
-import { Dashboard } from './pages/Dashboard'
-
+import { useSEO } from './hooks/useSEO'
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => window.innerWidth < 768)
@@ -58,7 +57,6 @@ function AppLoader() {
   )
 }
 
-
 function Home() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
@@ -74,6 +72,7 @@ function Home() {
     description: 'Find restaurants, mechanics, pharmacies, salons and more near you on Proxima.',
     url: 'https://proxima-web-lemon.vercel.app',
   })
+
   const fetchNearby = useCallback(async (lat, lng, cat = '') => {
     setLoading(true)
     setError(null)
@@ -103,6 +102,7 @@ function Home() {
   useEffect(() => {
     if (location) fetchNearby(location.lat, location.lng, category)
   }, [location, category])
+
   function handleSearch(q) {
     if (!location) return
     if (q) fetchSearch(q, location.lat, location.lng)
@@ -161,6 +161,7 @@ function Home() {
         activeCategory={category}
         locationError={locationError}
         location={location}
+        onRouteResults={results => setBusinesses(results)}
       />
       <div style={{ flex: 1, height: '100dvh', position: 'relative', overflow: 'hidden' }}>
         {locationLoading ? (
