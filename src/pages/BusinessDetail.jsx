@@ -215,32 +215,32 @@ export function BusinessDetail() {
                   />
                   <Marker position={[b.coordinates.lat, b.coordinates.lng]} icon={makePin()} />
                 </MapContainer>
-
-                href={`https://www.google.com/maps/search/?api=1&query=${b.coordinates.lat},${b.coordinates.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="detail-open-maps"
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${b.coordinates.lat},${b.coordinates.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="detail-open-maps"
                 >
-                <ExternalLink size={13} />
-                Open in Maps
-              </a>
-            </div>
+                  <ExternalLink size={13} />
+                  Open in Maps
+                </a>
+              </div>
             </div>
           )}
 
-        {b.verification_tier !== 'unverified' && (
-          <div className="detail-protection">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <ShieldCheck size={16} strokeWidth={2} style={{ color: 'var(--accent)' }} />
-              <span style={{ fontWeight: 700, fontSize: 13 }}>Proxima Protection</span>
+          {b.verification_tier !== 'unverified' && (
+            <div className="detail-protection">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <ShieldCheck size={16} strokeWidth={2} style={{ color: 'var(--accent)' }} />
+                <span style={{ fontWeight: 700, fontSize: 13 }}>Proxima Protection</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                This business is a verified Proxima partner. All services are backed by our community excellence guarantee.
+              </p>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-              This business is a verified Proxima partner. All services are backed by our community excellence guarantee.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </div >
   )
 }
