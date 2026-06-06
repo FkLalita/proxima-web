@@ -44,6 +44,7 @@ function ZoomTracker({ onZoom }) {
 
 function ClusterLayer({ location, zoom }) {
   const [clusters, setClusters] = useState([])
+  const map = useMap()
 
   useEffect(() => {
     if (!location || zoom >= 13) { setClusters([]); return }
@@ -55,19 +56,32 @@ function ClusterLayer({ location, zoom }) {
   }, [location, zoom])
 
   return clusters.map(c => (
-    <Circle
+    <Marker
       key={c.cluster_id}
-      center={[c.lat, c.lng]}
-      radius={zoom <= 8 ? 20000 : 8000}
-      pathOptions={{ color: '#1B7A4A', fillColor: '#1B7A4A', fillOpacity: 0.15, weight: 2 }}
+      position={[c.lat, c.lng]}
+      icon={L.divIcon({
+        className: '',
+        html: `<div style="
+          width:44px;height:44px;
+          background:#1B7A4A;
+          border-radius:50%;
+          border:3px solid white;
+          box-shadow:0 2px 8px rgba(0,0,0,0.3);
+          display:flex;align-items:center;justify-content:center;
+          color:white;font-weight:700;font-size:14px;
+          font-family:sans-serif;
+        ">${c.count}</div>`,
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+      })}
     >
       <Popup>
         <div style={{ textAlign: 'center', fontFamily: 'sans-serif' }}>
-          <p style={{ fontWeight: 700, fontSize: 16 }}>{c.count}</p>
-          <p style={{ fontSize: 11, color: '#888' }}>businesses here</p>
+          <p style={{ fontWeight: 700, fontSize: 14 }}>{c.count} businesses</p>
+          <p style={{ fontSize: 11, color: '#888' }}>Zoom in to see them</p>
         </div>
       </Popup>
-    </Circle>
+    </Marker>
   ))
 }
 
